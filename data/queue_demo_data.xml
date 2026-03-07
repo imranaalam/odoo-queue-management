@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+
+    <!--
+        Default "Main Queue" created on first install so the module is ready
+        to use immediately.  noupdate="1" → never overwritten on upgrade.
+    -->
+    <record id="queue_main" model="queue.queue">
+        <field name="name">Main Queue</field>
+        <field name="prefix">Q</field>
+        <field name="sequence">1</field>
+        <field name="color">1</field>
+        <field name="state">open</field>
+        <field name="description">Default general-purpose queue. Rename or add more queues in Configuration.</field>
+    </record>
+
+</odoo>

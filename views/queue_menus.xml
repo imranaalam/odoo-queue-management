@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MENU STRUCTURE
+         Queue Management
+         ├── Live Board      (token kanban, active tokens only)
+         ├── Queues          (queue kanban/list)
+         ├── All Tokens      (token list)
+         └── Configuration
+             └── Settings    (placeholder — uses ir.actions.act_window_close)
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Root application menu -->
+    <menuitem
+        id="menu_queue_management_root"
+        name="Queue Management"
+        sequence="80"
+        web_icon="queue_management,static/description/icon.png"
+        groups="queue_management.group_queue_user"/>
+
+    <!-- Live Board -->
+    <menuitem
+        id="menu_queue_live_board"
+        name="Live Board"
+        parent="menu_queue_management_root"
+        action="action_queue_live_board"
+        sequence="10"
+        groups="queue_management.group_queue_user"/>
+
+    <!-- Queues -->
+    <menuitem
+        id="menu_queue_queues"
+        name="Queues"
+        parent="menu_queue_management_root"
+        action="action_queue_queue"
+        sequence="20"
+        groups="queue_management.group_queue_user"/>
+
+    <!-- All Tokens -->
+    <menuitem
+        id="menu_queue_tokens"
+        name="All Tokens"
+        parent="menu_queue_management_root"
+        action="action_queue_token_all"
+        sequence="30"
+        groups="queue_management.group_queue_user"/>
+
+    <!-- Configuration (manager only) -->
+    <menuitem
+        id="menu_queue_configuration"
+        name="Configuration"
+        parent="menu_queue_management_root"
+        sequence="90"
+        groups="queue_management.group_queue_manager"/>
+
+    <menuitem
+        id="menu_queue_config_queues"
+        name="Manage Queues"
+        parent="menu_queue_configuration"
+        action="action_queue_queue"
+        sequence="10"
+        groups="queue_management.group_queue_manager"/>
+
+</odoo>

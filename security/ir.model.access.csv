@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_queue_queue_user,queue.queue user,model_queue_queue,queue_management.group_queue_user,1,0,0,0
+access_queue_queue_manager,queue.queue manager,model_queue_queue,queue_management.group_queue_manager,1,1,1,1
+access_queue_token_user,queue.token user,model_queue_token,queue_management.group_queue_user,1,1,1,0
+access_queue_token_manager,queue.token manager,model_queue_token,queue_management.group_queue_manager,1,1,1,1

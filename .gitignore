@@ -1,0 +1,25 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Odoo
+*.log
+.odoo_module_hash
+
+# Node
+node_modules/

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         TOKEN  (queue.token)  —  List / Kanban / Form / Search
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── List ──────────────────────────────────────────────────────────── -->
+    <record id="view_queue_token_list" model="ir.ui.view">
+        <field name="name">queue.token.list</field>
+        <field name="model">queue.token</field>
+        <field name="arch" type="xml">
+            <tree string="Queue Tokens"
+                  decoration-success="state == 'done'"
+                  decoration-primary="state in ['called','serving']"
+                  decoration-warning="state == 'waiting'"
+                  decoration-muted="state in ['skipped','noshow']">
+                <field name="display_number"/>
+                <field name="queue_id"/>
+                <field name="customer_name"/>
+                <field name="customer_phone"/>
+                <field name="partner_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'waiting'"
+                       decoration-primary="state in ['called','serving']"
+                       decoration-success="state == 'done'"
+                       decoration-muted="state in ['skipped','noshow']"/>
+                <field name="source"       optional="show"/>
+                <field name="wait_minutes" string="Wait (min)"  optional="show"/>
+                <field name="created_at"   string="Created"     optional="show"/>
+                <field name="called_at"    string="Called At"   optional="hide"/>
+                <field name="served_at"    string="Served At"   optional="hide"/>
+                <!-- Row action buttons -->
+                <button name="action_call"
+                        string="Call"
+                        type="object"
+                        invisible="state not in ('waiting', 'skipped')"/>
+                <button name="action_done"
+                        string="Done"
+                        type="object"
+                        invisible="state not in ('called', 'serving')"/>
+                <button name="action_skip"
+                        string="Skip"
+                        type="object"
+                        invisible="state not in ('waiting', 'called')"/>
+                <button name="action_reset"
+                        string="Reset"
+                        type="object"
+                        invisible="state not in ('skipped', 'noshow')"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Kanban (Live Board) ────────────────────────────────────────────── -->
+    <record id="view_queue_token_kanban" model="ir.ui.view">
+        <field name="name">queue.token.kanban</field>
+        <field name="model">queue.token</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false"
+                    class="o_kanban_small_column">
+                <field name="display_number"/>
+                <field name="queue_id"/>
+                <field name="customer_name"/>
+                <field name="customer_phone"/>
+                <field name="state"/>
+                <field name="wait_minutes"/>
+                <field name="created_at"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong style="font-size:22px;">
+                                    <field name="display_number"/>
+                                </strong>
+                                <span t-attf-class="badge #{
+                                    record.state.raw_value == 'waiting'  ? 'bg-warning text-dark' :
+                                    record.state.raw_value == 'called'   ? 'bg-primary' :
+                                    record.state.raw_value == 'serving'  ? 'bg-info' :
+                                    record.state.raw_value == 'done'     ? 'bg-success' : 'bg-secondary'
+                                }">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                            <div class="mt4">
+                                <t t-if="record.customer_name.raw_value">
+                                    <div class="fw-bold">
+                                        <field name="customer_name"/>
+                                    </div>
+                                </t>
+                                <t t-if="record.customer_phone.raw_value">
+                                    <small class="text-muted">
+                                        <field name="customer_phone"/>
+                                    </small>
+                                </t>
+                            </div>
+                            <div class="mt4 d-flex justify-content-between">
+                                <small class="text-muted">
+                                    <field name="queue_id"/>
+                                </small>
+                                <small class="text-muted">
+                                    <field name="wait_minutes"/>m wait
+                                </small>
+                            </div>
+                            <div class="mt8 d-flex gap-1">
+                                <button t-if="record.state.raw_value in ['waiting','skipped']"
+                                        name="action_call" type="object"
+                                        class="btn btn-sm btn-primary flex-fill"
+                                        title="Call this customer">
+                                    📢 Call
+                                </button>
+                                <button t-if="record.state.raw_value in ['called','serving']"
+                                        name="action_done" type="object"
+                                        class="btn btn-sm btn-success flex-fill"
+                                        title="Mark as Done">
+                                    ✓ Done
+                                </button>
+                                <button t-if="record.state.raw_value in ['waiting','called']"
+                                        name="action_skip" type="object"
+                                        class="btn btn-sm btn-secondary flex-fill"
+                                        title="Skip">
+                                    ⏭
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Form ───────────────────────────────────────────────────────────── -->
+    <record id="view_queue_token_form" model="ir.ui.view">
+        <field name="name">queue.token.form</field>
+        <field name="model">queue.token</field>
+        <field name="arch" type="xml">
+            <form string="Queue Token">
+                <header>
+                    <button name="action_call"
+                            string="Call"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('waiting', 'skipped')"/>
+                    <button name="action_serve"
+                            string="Serving"
+                            type="object" class="btn-info"
+                            invisible="state != 'called'"/>
+                    <button name="action_done"
+                            string="Done"
+                            type="object" class="btn-success"
+                            invisible="state not in ('called', 'serving')"/>
+                    <button name="action_skip"
+                            string="Skip"
+                            type="object" class="btn-warning"
+                            invisible="state not in ('waiting', 'called')"/>
+                    <button name="action_noshow"
+                            string="No-Show"
+                            type="object" class="btn-danger"
+                            invisible="state not in ('called',)"/>
+                    <button name="action_reset"
+                            string="Reset to Waiting"
+                            type="object"
+                            invisible="state not in ('skipped', 'noshow')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="waiting,called,serving,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_number" readonly="1"
+                                   style="font-size:3rem; letter-spacing:4px;"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Queue">
+                            <field name="queue_id"/>
+                            <field name="source"/>
+                            <field name="number" readonly="1"/>
+                        </group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="customer_name"/>
+                            <field name="customer_phone"/>
+                        </group>
+                    </group>
+                    <group string="Timing">
+                        <group>
+                            <field name="created_at" readonly="1"/>
+                            <field name="wait_minutes" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="called_at" readonly="1"/>
+                            <field name="served_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"
+                               placeholder="Additional notes about this customer or visit…"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Search ─────────────────────────────────────────────────────────── -->
+    <record id="view_queue_token_search" model="ir.ui.view">
+        <field name="name">queue.token.search</field>
+        <field name="model">queue.token</field>
+        <field name="arch" type="xml">
+            <search string="Search Tokens">
+                <field name="display_number" string="Token #"/>
+                <field name="customer_name"/>
+                <field name="customer_phone"/>
+                <field name="queue_id"/>
+                <field name="partner_id"/>
+                <!-- Quick filters by state -->
+                <filter string="Waiting"  name="state_waiting"
+                        domain="[('state','=','waiting')]"/>
+                <filter string="Called"   name="state_called"
+                        domain="[('state','in',['called','serving'])]"/>
+                <filter string="Done"     name="state_done"
+                        domain="[('state','=','done')]"/>
+                <filter string="Skipped / No-Show" name="state_skipped"
+                        domain="[('state','in',['skipped','noshow'])]"/>
+                <separator/>
+                <filter string="Today"    name="today"
+                        domain="[('created_at','&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <!-- Group by -->
+                <group expand="0" string="Group By">
+                    <filter string="Queue"  name="group_queue"
+                            context="{'group_by': 'queue_id'}"/>
+                    <filter string="State"  name="group_state"
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Source" name="group_source"
+                            context="{'group_by': 'source'}"/>
+                    <filter string="Date"   name="group_date"
+                            context="{'group_by': 'created_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Actions ────────────────────────────────────────────────────────── -->
+
+    <!-- All Tokens (default: list) -->
+    <record id="action_queue_token_all" model="ir.actions.act_window">
+        <field name="name">All Tokens</field>
+        <field name="res_model">queue.token</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No tokens yet — open a queue and issue the first token!
+            </p>
+        </field>
+    </record>
+
+    <!-- Live Board (default: kanban grouped by state) -->
+    <record id="action_queue_live_board" model="ir.actions.act_window">
+        <field name="name">Live Board</field>
+        <field name="res_model">queue.token</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_state_waiting': 1, 'search_default_group_state': 1}</field>
+        <field name="domain">[('state', 'not in', ['done','skipped','noshow'])]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                The queue is empty — no active tokens right now.
+            </p>
+        </field>
+    </record>
+
+</odoo>
