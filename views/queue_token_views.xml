@@ -135,6 +135,13 @@
         <field name="arch" type="xml">
             <form string="Queue Token">
                 <header>
+                    <!-- Print slip — visible once the record has been saved -->
+                    <button name="action_print_slip"
+                            string="Print Slip"
+                            type="object"
+                            icon="fa-print"
+                            invisible="not id"/>
+                    <!-- Lifecycle transitions -->
                     <button name="action_call"
                             string="Call"
                             type="object" class="btn-primary"

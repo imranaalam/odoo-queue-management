@@ -33,6 +33,7 @@ Key Features
         'security/queue_management_security.xml',
         'security/ir.model.access.csv',
         'data/queue_demo_data.xml',
+        'views/report_queue_token.xml',
         'views/queue_queue_views.xml',
         'views/queue_token_views.xml',
         'views/queue_menus.xml',

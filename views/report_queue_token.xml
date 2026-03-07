@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         TOKEN SLIP REPORT — queue.token
+         Prints a compact queue ticket: number, name, phone, date/time.
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Report action (HTML so it opens in-browser for print/save) -->
+    <record id="action_report_queue_token_slip" model="ir.actions.report">
+        <field name="name">Queue Token Slip</field>
+        <field name="model">queue.token</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">queue_management.report_queue_token_slip</field>
+        <field name="print_report_name">'Slip-' + object.display_number</field>
+        <field name="binding_model_id" ref="model_queue_token"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- QWeb template -->
+    <template id="report_queue_token_slip">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div style="
+                    font-family: 'Courier New', Courier, monospace;
+                    text-align: center;
+                    max-width: 320px;
+                    margin: 20px auto;
+                    padding: 24px 16px;
+                    border: 3px solid #222;
+                    border-radius: 6px;
+                    page-break-after: always;
+                ">
+                    <!-- Queue name -->
+                    <div style="
+                        font-size: 14px;
+                        font-weight: 700;
+                        letter-spacing: 3px;
+                        text-transform: uppercase;
+                        margin-bottom: 2px;
+                    ">
+                        <t t-esc="doc.queue_id.name"/>
+                    </div>
+                    <div style="
+                        font-size: 10px;
+                        letter-spacing: 2px;
+                        color: #666;
+                        margin-bottom: 14px;
+                    ">── QUEUE TICKET ──</div>
+
+                    <div style="border-top: 2px dashed #333; margin: 8px 0;"/>
+
+                    <!-- Big token number -->
+                    <div style="
+                        font-size: 88px;
+                        font-weight: 900;
+                        line-height: 1;
+                        letter-spacing: 6px;
+                        margin: 18px 0;
+                    ">
+                        <t t-esc="doc.display_number"/>
+                    </div>
+
+                    <div style="border-top: 2px dashed #333; margin: 8px 0;"/>
+
+                    <!-- Customer details -->
+                    <t t-if="doc.customer_name">
+                        <div style="
+                            font-size: 16px;
+                            font-weight: 700;
+                            margin-top: 10px;
+                        ">
+                            <t t-esc="doc.customer_name"/>
+                        </div>
+                    </t>
+                    <t t-if="doc.customer_phone">
+                        <div style="
+                            font-size: 13px;
+                            color: #444;
+                            margin-top: 4px;
+                        ">
+                            <t t-esc="doc.customer_phone"/>
+                        </div>
+                    </t>
+
+                    <div style="border-top: 1px dashed #aaa; margin: 14px 0;"/>
+
+                    <!-- Timestamp -->
+                    <div style="font-size: 11px; color: #555;">
+                        <t t-esc="doc.created_at.strftime('%d %b %Y  %H:%M') if doc.created_at else ''"/>
+                    </div>
+                    <div style="font-size: 10px; color: #888; margin-top: 8px; line-height: 1.6;">
+                        Please wait — we will call your number
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

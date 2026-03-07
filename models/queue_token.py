@@ -74,6 +74,35 @@ class QueueToken(models.Model):
                 diff = False
             rec.wait_minutes = int(diff.total_seconds() / 60) if diff else 0
 
+    # ── ORM overrides ────────────────────────────────────────────────────────
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Auto-assign the next sequential number when not supplied."""
+        for vals in vals_list:
+            if not vals.get('number') and vals.get('queue_id'):
+                vals['number'] = self._next_number(vals['queue_id'])
+        return super().create(vals_list)
+
+    # ── Onchange ──────────────────────────────────────────────────────────────
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        """Fill customer name and phone from the selected partner."""
+        if self.partner_id:
+            if not self.customer_name:
+                self.customer_name = self.partner_id.name
+            if not self.customer_phone:
+                self.customer_phone = (
+                    self.partner_id.phone or self.partner_id.mobile or ''
+                )
+
+    # ── Print action ──────────────────────────────────────────────────────────
+    def action_print_slip(self):
+        """Return the token slip report action."""
+        self.ensure_one()
+        return self.env.ref(
+            'queue_management.action_report_queue_token_slip'
+        ).report_action(self)
+
     # ── State actions (called from buttons / server actions) ──────────────────
     def action_call(self):
         """Mark as Called and fire all notification webhooks."""
