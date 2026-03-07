@@ -130,11 +130,10 @@
                             type="object"
                             class="btn-danger"
                             invisible="state == 'closed'"/>
-                    <button name="call_next"
+                    <button name="action_call_next"
                             string="Call Next"
                             type="object"
                             class="btn-primary"
-                            context="{'active_id': active_id}"
                             invisible="state != 'open'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="open,paused,closed"/>

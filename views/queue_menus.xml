@@ -11,13 +11,13 @@
              └── Settings    (placeholder — uses ir.actions.act_window_close)
          ══════════════════════════════════════════════════════════════════ -->
 
-    <!-- Root application menu -->
+    <!-- Root application menu — no groups restriction so the app tile is
+         always visible; security is enforced at the sub-menu and model level -->
     <menuitem
         id="menu_queue_management_root"
         name="Queue Management"
         sequence="80"
-        web_icon="queue_management,static/description/icon.png"
-        groups="queue_management.group_queue_user"/>
+        web_icon="queue_management,static/description/icon.png"/>
 
     <!-- Live Board -->
     <menuitem

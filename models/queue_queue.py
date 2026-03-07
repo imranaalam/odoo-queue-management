@@ -100,6 +100,11 @@ class QueueQueue(models.Model):
     def action_close(self):
         self.write({'state': 'closed'})
 
+    def action_call_next(self):
+        """Button action — calls the next waiting token for this queue."""
+        self.ensure_one()
+        self.call_next(self.id)
+
     def action_view_tokens(self):
         """Smart button: open tokens for this queue."""
         self.ensure_one()
