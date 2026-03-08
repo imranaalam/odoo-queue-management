@@ -1,186 +1,194 @@
-// ─────────────────────────────────────────────────────────────
-//  Queue Management Kiosk — Dark POS-like theme
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  Queue Management Kiosk — Odoo-native POS-like styling
+//
+//  This file ONLY adds the small number of things Odoo's Bootstrap / OWL
+//  utilities don't already give us.  Everything else is vanilla btn-*, bg-*,
+//  fw-*, d-flex, etc.
+// ─────────────────────────────────────────────────────────────────────────────
 
+// ── Root container ────────────────────────────────────────────────────────────
+// Mirrors .pos  (POS app root)
 .o_qm_kiosk {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     user-select: none;
+    font-family: inherit;   // respect Odoo's default font
 }
 
-// ── Category sidebar buttons ──────────────────────────────────
+// ── Header bar ───────────────────────────────────────────────────────────────
+// Mirrors .pos-topheader height
+.o_qm_topheader {
+    height: 56px;
+    flex-shrink: 0;
+}
+
+// ── Category sidebar (mirrors POS category strip) ─────────────────────────────
+.o_qm_sidebar {
+    width: 130px;
+    min-width: 130px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
 .o_qm_cat_btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 8px;
-    margin-bottom: 4px;
-    border-radius: 10px;
-    color: #64748b;
-    transition: background 0.15s, color 0.15s;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: #cbd5e1;
-    }
-
-    &.active {
-        background: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
-        border-left: 3px solid #3b82f6;
-    }
-}
-
-.o_qm_cat_label {
+    // POS category-button look: btn btn-light stacked icon + label
+    border-radius: 8px;
+    min-height: 76px;
     font-size: 11px;
     font-weight: 600;
-    text-align: center;
-    margin-top: 6px;
     line-height: 1.2;
     word-break: break-word;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+
+    &:hover:not(.active) {
+        background-color: var(--bs-light, #f8f9fa);
+    }
+
+    // Active state — matches Odoo primary (teal)
+    &.active {
+        background-color: var(--o-component-active-bg, #017e84) !important;
+        border-color:     var(--o-component-active-bg, #017e84) !important;
+        color:            #fff !important;
+    }
 }
 
-// ── Service cards ─────────────────────────────────────────────
+// ── Service card grid (mirrors .product-list in POS) ──────────────────────────
+.o_qm_svc_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    align-content: start;
+}
 
+// ── Service card (mirrors .product in POS) ────────────────────────────────────
 .o_qm_svc_card {
-    position: relative;
-    background: #1e293b;
-    border: 2px solid #334155;
-    border-radius: 14px;
-    padding: 16px 12px;
-    text-align: center;
-    transition: all 0.15s ease;
-    height: 100%;
+    // Keep a fixed height so cards in a row align nicely
+    min-height: 150px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--bs-border-color, #dee2e6);
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
 
-    &:hover {
-        border-color: #3b82f6;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+    &:hover:not(.selected) {
+        border-color: var(--o-component-active-bg, #017e84);
+        box-shadow: 0 2px 8px rgba(1, 126, 132, 0.15);
     }
 
+    // Selected: teal fill (like highlighted orderline in POS)
     &.selected {
-        border-color: #3b82f6;
-        background: rgba(59, 130, 246, 0.12);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        background-color: var(--o-component-active-bg, #017e84) !important;
+        border-color:     var(--o-component-active-bg, #017e84) !important;
+        color:            #fff !important;
+
+        .o_qm_svc_name { color: #fff; }
+        .o_qm_svc_desc { color: rgba(255,255,255,0.8); }
+        .fa { color: rgba(255,255,255,0.85) !important; }
     }
 }
 
-.o_qm_check {
+// ── Service image (mirrors .product-img) ──────────────────────────────────────
+.o_qm_svc_img {
+    width: 100%;
+    height: 80px;
+    object-fit: contain;
+    display: block;
+}
+
+// ── Service name (mirrors .product-name) ──────────────────────────────────────
+.o_qm_svc_name {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: inherit;
+}
+
+// ── Service description ───────────────────────────────────────────────────────
+.o_qm_svc_desc {
+    font-size: 10px;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+// ── Checkmark badge (shown when card is selected) ─────────────────────────────
+.o_qm_check_badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    background: #3b82f6;
-    color: white;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    color: var(--o-component-active-bg, #017e84);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.o_qm_svc_img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.o_qm_svc_placeholder {
-    width: 80px;
-    height: 80px;
-    background: #0f172a;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: #334155;
-    margin: 0 auto 10px;
-}
-
-.o_qm_svc_name {
-    color: #e2e8f0;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.o_qm_svc_desc {
-    color: #64748b;
     font-size: 11px;
-    margin-top: 4px;
-    line-height: 1.3;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-// ── Cart panel labels ─────────────────────────────────────────
-
-.o_qm_label {
-    color: #64748b;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-// ── Customer input fields ─────────────────────────────────────
-
-.o_qm_input {
-    width: 100%;
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: #e2e8f0;
-    padding: 10px 12px;
-    font-size: 13px;
-    outline: none;
-
-    &::placeholder {
-        color: #475569;
-    }
-
-    &:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-    }
-}
-
-// ── Issue Token button ────────────────────────────────────────
-
-.o_qm_issue_btn {
-    width: 100%;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-size: 18px;
     font-weight: 700;
-    padding: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: opacity 0.15s, transform 0.15s;
-    margin-top: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    line-height: 1;
+}
 
-    &:hover:not(:disabled) {
-        opacity: 0.9;
-        transform: translateY(-1px);
+// ── Right panel (mirrors POS leftpane) ────────────────────────────────────────
+.o_qm_rightpane {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+}
+
+// ── Orderline (mirrors POS .orderline) ────────────────────────────────────────
+.o_qm_orderline {
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: default;
+    transition: background-color 0.1s;
+
+    &:hover {
+        background-color: var(--bs-light, #f8f9fa);
+    }
+}
+
+// ── Issue Token button (mirrors POS .pay-order-button) ────────────────────────
+.o_qm_issue_btn {
+    height: 56px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    transition: opacity 0.15s, transform 0.1s;
+
+    &:active:not(:disabled) {
+        transform: scale(0.98);
     }
 
     &:disabled {
-        opacity: 0.4;
+        opacity: 0.45;
         cursor: not-allowed;
     }
+}
+
+// ── Success: big token number ─────────────────────────────────────────────────
+.o_qm_token_number {
+    font-size: 88px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--o-component-active-bg, #017e84);
+    line-height: 1;
+}
+
+// ── Custom scrollbar (mirrors .pos *::-webkit-scrollbar) ─────────────────────
+.o_qm_kiosk *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+.o_qm_kiosk *::-webkit-scrollbar-track {
+    background: var(--bs-gray-200, #e9ecef);
+}
+.o_qm_kiosk *::-webkit-scrollbar-thumb {
+    background: var(--bs-gray-500, #adb5bd);
+    border-radius: 2px;
 }

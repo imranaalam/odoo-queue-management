@@ -1,278 +1,376 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-<t t-name="queue_management.KioskScreen">
-    <div class="o_qm_kiosk d-flex flex-column" style="height:100vh; overflow:hidden; background:#0f172a;">
+<!--
+    Queue Management — POS-like Kiosk Screen
+    =========================================
+    Layout mirrors the Odoo 17 Point of Sale product screen:
 
-        <!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
-        <div class="d-flex align-items-center px-4 py-3"
-             style="background:#1e293b; border-bottom:1px solid #334155; flex-shrink:0;">
-            <div class="me-3" style="font-size:24px;">🎫</div>
+      ┌─────────────────── HEADER (pos-topheader style) ───────────────────┐
+      │ 🎫 Queue Management — Issue Token        [Queue A 3▾] [Queue B 1▾] │
+      ├──────────┬──────────────────────────────┬──────────────────────────┤
+      │ CATEGORY │   SERVICE CARD GRID          │  CART / ISSUE PANEL      │
+      │ SIDEBAR  │   (product-list style)       │  (leftpane style)        │
+      │          │                              │                          │
+      │ [All]    │  ┌────┐ ┌────┐ ┌────┐       │  Queue: Main Queue       │
+      │ [Aesth.] │  │img │ │img │ │img │       │  ─────────────────────   │
+      │ [Medical]│  │Name│ │Name│ │Name│       │  Selected Services:      │
+      │ [Laser]  │  └────┘ └────┘ └────┘       │  • Hydrafacial      [x]  │
+      │          │  ┌────┐ ┌────┐               │  • Laser            [x]  │
+      │          │  │img │ │img │               │  ─────────────────────   │
+      │          │  │Name│ │Name│               │  [▾ Add Customer Info ]  │
+      │          │  └────┘ └────┘               │  ─────────────────────   │
+      │          │                              │  [     Issue Token     ] │
+      └──────────┴──────────────────────────────┴──────────────────────────┘
+-->
+
+<t t-name="queue_management.KioskScreen">
+<div class="o_qm_kiosk h-100 d-flex flex-column bg-100">
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         HEADER  —  mirrors .pos-topheader
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="o_qm_topheader d-flex align-items-center px-3 bg-white border-bottom">
+
+        <!-- Branding (mirrors .pos-branding) -->
+        <div class="d-flex align-items-center gap-2 me-4">
+            <i class="fa fa-ticket text-primary" style="font-size:22px;"/>
             <div>
-                <div style="color:white; font-size:18px; font-weight:700; letter-spacing:0.5px;">
-                    Queue Management
-                </div>
-                <div style="color:#94a3b8; font-size:12px; letter-spacing:2px; text-transform:uppercase;">
+                <div class="fw-bolder lh-sm" style="font-size:15px;">Queue Management</div>
+                <div class="text-muted"
+                     style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase;">
                     Issue Token
                 </div>
             </div>
-            <div class="ms-auto d-flex gap-2">
-                <t t-foreach="state.queues" t-as="q" t-key="q.id">
-                    <span t-att-title="q.name + ' — ' + q.waiting_count + ' waiting'"
-                          t-attf-style="
-                            background:#{state.selectedQueueId === q.id ? '#3b82f6' : '#334155'};
-                            color:white; padding:4px 12px; border-radius:20px;
-                            font-size:12px; font-weight:600; cursor:pointer;"
-                          t-on-click="() => this.selectQueue(q.id)">
-                        <t t-esc="q.name"/>
-                        <span style="margin-left:6px; background:rgba(255,255,255,0.2);
-                                     padding:1px 6px; border-radius:10px; font-size:11px;">
-                            <t t-esc="q.waiting_count"/>
-                        </span>
+        </div>
+
+        <!-- Queue selector pills (mirrors .status-buttons) -->
+        <div class="d-flex gap-2 ms-auto align-items-center">
+            <span class="text-muted me-1" style="font-size:12px; font-weight:600;">Queue:</span>
+            <t t-foreach="state.queues" t-as="q" t-key="q.id">
+                <button t-on-click="() => this.selectQueue(q.id)"
+                        t-attf-class="btn btn-sm fw-bolder #{state.selectedQueueId === q.id
+                            ? 'btn-primary'
+                            : 'btn-light border'}"
+                        t-att-title="q.name + ' — ' + q.waiting_count + ' waiting'">
+                    <t t-esc="q.name"/>
+                    <span t-attf-class="badge ms-1 #{state.selectedQueueId === q.id
+                              ? 'text-bg-light text-primary'
+                              : 'text-bg-secondary'}">
+                        <t t-esc="q.waiting_count"/>
                     </span>
+                </button>
+            </t>
+            <!-- No open queues -->
+            <t t-if="!state.queues.length">
+                <span class="text-danger fw-bolder" style="font-size:13px;">
+                    <i class="fa fa-warning me-1"/>No open queues
+                </span>
+            </t>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SELECT STEP  —  Category sidebar + Service grid + Cart
+         ══════════════════════════════════════════════════════════════════════ -->
+    <t t-if="state.step === 'select'">
+    <div class="d-flex flex-grow-1 overflow-hidden">
+
+        <!-- ── LEFT: Category sidebar  (mirrors POS category strip, vertical) ── -->
+        <div class="o_qm_sidebar d-flex flex-column bg-200 border-end py-2 px-1 gap-1">
+
+            <!-- "All" button -->
+            <button t-on-click="() => this.selectCategory(null)"
+                    t-attf-class="o_qm_cat_btn btn w-100 d-flex flex-column align-items-center
+                                  justify-content-center gap-1 p-2
+                                  #{state.selectedCatId === null ? 'active' : 'btn-light'}">
+                <i class="fa fa-th" style="font-size:22px;"/>
+                <span>All</span>
+            </button>
+
+            <!-- Category buttons -->
+            <t t-foreach="state.categories" t-as="cat" t-key="cat.id">
+                <button t-on-click="() => this.selectCategory(cat.id)"
+                        t-attf-class="o_qm_cat_btn btn w-100 d-flex flex-column align-items-center
+                                      justify-content-center gap-1 p-2
+                                      #{state.selectedCatId === cat.id ? 'active' : 'btn-light'}">
+                    <t t-if="catImgUrl(cat)">
+                        <img t-att-src="catImgUrl(cat)"
+                             class="rounded"
+                             style="width:38px; height:38px; object-fit:cover;"/>
+                    </t>
+                    <t t-else="">
+                        <i class="fa fa-tag" style="font-size:22px;"/>
+                    </t>
+                    <span class="text-center w-100" style="max-width:110px; overflow-wrap:break-word;">
+                        <t t-esc="cat.name"/>
+                    </span>
+                </button>
+            </t>
+        </div>
+
+        <!-- ── CENTRE: Service grid  (mirrors .rightpane / .product-list-container) ── -->
+        <div class="flex-grow-1 d-flex flex-column overflow-hidden bg-100">
+
+            <!-- Hint bar -->
+            <div class="d-flex align-items-center px-3 py-2 bg-200 border-bottom flex-shrink-0">
+                <i class="fa fa-hand-o-up text-muted me-2"/>
+                <span class="text-muted" style="font-size:12px;">
+                    Tap a service to select — tap again to deselect. Multiple selections allowed.
+                </span>
+            </div>
+
+            <!-- Scrollable product grid -->
+            <div class="p-2 overflow-y-auto flex-grow-1">
+                <t t-if="filteredServices.length">
+                    <div class="o_qm_svc_grid">
+                        <t t-foreach="filteredServices" t-as="svc" t-key="svc.id">
+                            <!-- Service card  (mirrors .product  article.btn.btn-light) -->
+                            <button t-on-click="() => this.toggleService(svc)"
+                                    t-attf-class="o_qm_svc_card btn position-relative d-flex
+                                                  flex-column align-items-center justify-content-start
+                                                  p-2 text-center overflow-hidden
+                                                  #{isSelected(svc.id) ? 'selected' : 'btn-light'}">
+
+                                <!-- Selected checkmark badge -->
+                                <t t-if="isSelected(svc.id)">
+                                    <div class="o_qm_check_badge">
+                                        <i class="fa fa-check" style="font-size:10px;"/>
+                                    </div>
+                                </t>
+
+                                <!-- Image (mirrors .product-img) -->
+                                <t t-if="serviceImgUrl(svc)">
+                                    <div class="w-100 mb-2">
+                                        <img t-att-src="serviceImgUrl(svc)"
+                                             class="o_qm_svc_img"/>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="mb-2 d-flex align-items-center justify-content-center"
+                                         style="height:80px; width:100%;">
+                                        <i t-attf-class="fa fa-medkit #{isSelected(svc.id) ? 'text-white' : 'text-muted'}"
+                                           style="font-size:40px; opacity:0.6;"/>
+                                    </div>
+                                </t>
+
+                                <!-- Name (mirrors .product-name) -->
+                                <div class="o_qm_svc_name w-100">
+                                    <t t-esc="svc.name"/>
+                                </div>
+
+                                <!-- Description -->
+                                <t t-if="svc.description">
+                                    <div class="o_qm_svc_desc w-100 mt-1">
+                                        <t t-esc="svc.description"/>
+                                    </div>
+                                </t>
+                            </button>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- Empty state -->
+                <t t-else="">
+                    <div class="d-flex flex-column align-items-center justify-content-center
+                                h-100 text-center py-5 text-muted">
+                        <i class="fa fa-inbox mb-3" style="font-size:52px; opacity:0.3;"/>
+                        <div class="fw-bolder mb-1">No services in this category</div>
+                        <div style="font-size:12px;">
+                            Go to Configuration → Service Types to add services
+                        </div>
+                    </div>
                 </t>
             </div>
         </div>
 
-        <!-- ══ SELECT STEP ══════════════════════════════════════════════════════ -->
-        <t t-if="state.step === 'select'">
-            <div class="d-flex flex-grow-1" style="overflow:hidden;">
+        <!-- ── RIGHT: Cart + Issue panel  (mirrors .leftpane) ────────────────── -->
+        <div class="o_qm_rightpane d-flex flex-column bg-200 border-start">
 
-                <!-- LEFT: Category sidebar -->
-                <div class="d-flex flex-column py-3 px-2"
-                     style="width:160px; min-width:160px; background:#1e293b;
-                            border-right:1px solid #334155; overflow-y:auto;">
-                    <!-- "All" category -->
-                    <div t-on-click="() => this.selectCategory(null)"
-                         t-attf-class="o_qm_cat_btn #{state.selectedCatId === null ? 'active' : ''}"
-                         style="cursor:pointer;">
-                        <div style="font-size:28px; text-align:center; line-height:1;">⊞</div>
-                        <div class="o_qm_cat_label">All</div>
+            <!-- Queue info header -->
+            <div class="px-3 py-2 bg-white border-bottom flex-shrink-0">
+                <div class="text-muted mb-1"
+                     style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;">
+                    Selected Queue
+                </div>
+                <t t-if="selectedQueue">
+                    <div class="fw-bolder lh-sm" style="font-size:15px;">
+                        <t t-esc="selectedQueue.name"/>
                     </div>
-                    <t t-foreach="state.categories" t-as="cat" t-key="cat.id">
-                        <div t-on-click="() => this.selectCategory(cat.id)"
-                             t-attf-class="o_qm_cat_btn #{state.selectedCatId === cat.id ? 'active' : ''}"
-                             style="cursor:pointer;">
-                            <t t-if="catImgUrl(cat)">
-                                <img t-att-src="catImgUrl(cat)"
-                                     style="width:40px; height:40px; border-radius:8px;
-                                            object-fit:cover; display:block; margin:0 auto;"/>
-                            </t>
-                            <t t-else="">
-                                <div style="font-size:28px; text-align:center; line-height:1;">○</div>
-                            </t>
-                            <div class="o_qm_cat_label"><t t-esc="cat.name"/></div>
+                    <div class="text-muted" style="font-size:12px;">
+                        <i class="fa fa-hourglass-half me-1"/>
+                        <t t-esc="selectedQueue.waiting_count"/> waiting
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="text-danger fw-bolder">
+                        <i class="fa fa-warning me-1"/>Select a queue above
+                    </div>
+                </t>
+            </div>
+
+            <!-- Selected services list  (mirrors .order-container / orderlines) -->
+            <div class="flex-grow-1 overflow-y-auto p-3">
+                <div class="text-muted mb-2"
+                     style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;">
+                    Selected Services
+                </div>
+
+                <t t-if="state.selectedServices.length">
+                    <t t-foreach="state.selectedServices" t-as="s" t-key="s.id">
+                        <!-- Orderline (mirrors .orderline) -->
+                        <div class="o_qm_orderline d-flex justify-content-between align-items-center
+                                    mb-1 bg-white border rounded">
+                            <span class="fw-bolder lh-sm" style="font-size:13px;">
+                                <t t-esc="s.name"/>
+                            </span>
+                            <button t-on-click="() => this.removeService(s.id)"
+                                    class="btn btn-sm btn-light text-danger p-1 ms-2 flex-shrink-0"
+                                    title="Remove">
+                                <i class="fa fa-times"/>
+                            </button>
                         </div>
                     </t>
-                </div>
-
-                <!-- CENTRE: Service card grid -->
-                <div class="flex-grow-1 d-flex flex-column" style="overflow:hidden;">
-                    <!-- Hint bar -->
-                    <div class="px-4 py-2"
-                         style="background:#1e293b; border-bottom:1px solid #334155;
-                                color:#64748b; font-size:12px; flex-shrink:0;">
-                        Tap a service to select. Tap again to deselect.
-                        Multiple selections are allowed.
+                </t>
+                <t t-else="">
+                    <div class="border rounded bg-white text-muted text-center py-4 px-2"
+                         style="border-style:dashed !important; font-size:13px;">
+                        <i class="fa fa-hand-o-up d-block mb-2"
+                           style="font-size:28px; opacity:0.35;"/>
+                        Tap services from the grid
                     </div>
-                    <!-- Grid -->
-                    <div class="o_qm_grid p-3" style="overflow-y:auto; flex-grow:1;">
-                        <t t-if="filteredServices.length">
-                            <div class="row g-3">
-                                <t t-foreach="filteredServices" t-as="svc" t-key="svc.id">
-                                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                                        <div t-on-click="() => this.toggleService(svc)"
-                                             t-attf-class="o_qm_svc_card #{isSelected(svc.id) ? 'selected' : ''}"
-                                             style="cursor:pointer;">
-                                            <!-- Checkmark badge -->
-                                            <t t-if="isSelected(svc.id)">
-                                                <div class="o_qm_check">✓</div>
-                                            </t>
-                                            <!-- Image or placeholder -->
-                                            <t t-if="serviceImgUrl(svc)">
-                                                <img t-att-src="serviceImgUrl(svc)"
-                                                     class="o_qm_svc_img"/>
-                                            </t>
-                                            <t t-else="">
-                                                <div class="o_qm_svc_placeholder">✦</div>
-                                            </t>
-                                            <!-- Name -->
-                                            <div class="o_qm_svc_name">
-                                                <t t-esc="svc.name"/>
-                                            </div>
-                                            <!-- Description -->
-                                            <t t-if="svc.description">
-                                                <div class="o_qm_svc_desc">
-                                                    <t t-esc="svc.description"/>
-                                                </div>
-                                            </t>
-                                        </div>
-                                    </div>
-                                </t>
-                            </div>
+                </t>
+            </div>
+
+            <!-- Customer + Issue button footer  (mirrors .actionpad) -->
+            <div class="p-3 bg-white border-top d-flex flex-column gap-2">
+
+                <!-- Customer info toggle  (mirrors .set-partner button) -->
+                <button t-on-click="toggleCustomer"
+                        class="btn btn-light d-flex align-items-center py-2 fw-bolder text-start">
+                    <span class="d-flex align-items-center justify-content-center
+                                 rounded-circle me-2 bg-secondary text-white flex-shrink-0"
+                          style="width:28px; height:28px;">
+                        <i class="fa fa-user" style="font-size:12px;"/>
+                    </span>
+                    <span class="flex-grow-1 text-truncate">
+                        <t t-if="state.customerName">
+                            <t t-esc="state.customerName"/>
                         </t>
                         <t t-else="">
-                            <div class="text-center py-5" style="color:#475569;">
-                                <div style="font-size:48px; margin-bottom:12px;">○</div>
-                                <div style="font-size:16px;">No services in this category</div>
-                                <div style="font-size:13px; margin-top:6px;">
-                                    Add services under
-                                    Configuration → Service Types
-                                </div>
-                            </div>
+                            <span class="text-muted fw-normal">Add Customer Info</span>
                         </t>
-                    </div>
-                </div>
+                    </span>
+                    <i t-attf-class="fa #{state.showCustomer ? 'fa-chevron-down' : 'fa-chevron-right'}
+                                     ms-auto text-muted flex-shrink-0"/>
+                </button>
 
-                <!-- RIGHT: Cart / Issue panel -->
-                <div class="d-flex flex-column p-4"
-                     style="width:280px; min-width:280px; background:#1e293b;
-                            border-left:1px solid #334155; overflow-y:auto;">
+                <!-- Customer fields (expanded) -->
+                <t t-if="state.showCustomer">
+                    <input type="text"
+                           placeholder="Customer name"
+                           t-model="state.customerName"
+                           class="form-control form-control-sm"/>
+                    <input type="tel"
+                           placeholder="Phone / WhatsApp"
+                           t-model="state.customerPhone"
+                           class="form-control form-control-sm"/>
+                </t>
 
-                    <!-- Selected queue badge -->
-                    <div class="mb-3">
-                        <div class="o_qm_label">Queue</div>
-                        <div style="color:white; font-size:16px; font-weight:700;">
-                            <t t-if="selectedQueue">
-                                <t t-esc="selectedQueue.name"/>
-                                <span style="color:#64748b; font-size:12px; margin-left:8px;">
-                                    <t t-esc="selectedQueue.waiting_count"/> waiting
-                                </span>
-                            </t>
-                            <t t-else="">
-                                <span style="color:#ef4444;">— none —</span>
-                            </t>
-                        </div>
-                    </div>
-
-                    <!-- Selected services list -->
-                    <div class="o_qm_label">Selected Services</div>
-                    <div class="flex-grow-1 mb-3">
-                        <t t-if="state.selectedServices.length">
-                            <t t-foreach="state.selectedServices" t-as="s" t-key="s.id">
-                                <div class="d-flex align-items-center justify-content-between mb-2"
-                                     style="background:#0f172a; border:1px solid #334155;
-                                            border-radius:8px; padding:8px 12px;">
-                                    <span style="color:#e2e8f0; font-size:13px;">
-                                        <t t-esc="s.name"/>
-                                    </span>
-                                    <button t-on-click="() => this.removeService(s.id)"
-                                            style="background:none; border:none; color:#ef4444;
-                                                   cursor:pointer; font-size:16px; line-height:1;
-                                                   padding:0 0 0 8px;">✕</button>
-                                </div>
-                            </t>
-                        </t>
-                        <t t-else="">
-                            <div style="border:2px dashed #334155; border-radius:8px;
-                                        padding:16px; text-align:center; color:#475569;
-                                        font-size:13px;">
-                                No services selected
-                            </div>
-                        </t>
-                    </div>
-
-                    <!-- Customer info toggle -->
-                    <button t-on-click="toggleCustomer"
-                            style="background:transparent; border:1px solid #334155; color:#94a3b8;
-                                   border-radius:8px; padding:8px; font-size:12px;
-                                   cursor:pointer; margin-bottom:8px; width:100%;">
-                        <t t-if="state.showCustomer">▲ Hide customer info</t>
-                        <t t-else="">▼ Add customer info (optional)</t>
-                    </button>
-                    <t t-if="state.showCustomer">
-                        <input type="text"
-                               placeholder="Customer name"
-                               t-model="state.customerName"
-                               class="o_qm_input mb-2"/>
-                        <input type="tel"
-                               placeholder="Phone / WhatsApp"
-                               t-model="state.customerPhone"
-                               class="o_qm_input mb-3"/>
+                <!-- Issue Token  (mirrors .pay-order-button) -->
+                <button t-on-click="issueToken"
+                        t-att-disabled="state.loading or !state.selectedQueueId"
+                        class="o_qm_issue_btn btn btn-primary w-100
+                               d-flex align-items-center justify-content-center gap-2">
+                    <t t-if="state.loading">
+                        <i class="fa fa-spinner fa-spin"/>
+                        <span>Issuing…</span>
                     </t>
-
-                    <!-- Issue Token button -->
-                    <button t-on-click="issueToken"
-                            t-att-disabled="state.loading || !state.selectedQueueId"
-                            class="o_qm_issue_btn">
-                        <t t-if="state.loading">
-                            <span>Issuing…</span>
-                        </t>
-                        <t t-else="">
-                            <span style="font-size:20px;">🎫</span>
-                            <span>Issue Token</span>
-                        </t>
-                    </button>
-                </div>
+                    <t t-else="">
+                        <i class="fa fa-ticket" style="font-size:18px;"/>
+                        <span>Issue Token</span>
+                    </t>
+                </button>
             </div>
-        </t>
 
-        <!-- ══ SUCCESS STEP ══════════════════════════════════════════════════════ -->
-        <t t-if="state.step === 'success'">
-            <div class="d-flex flex-grow-1 align-items-center justify-content-center"
-                 style="background:#0f172a;">
-                <div style="text-align:center; max-width:520px; width:100%; padding:24px;">
-
-                    <!-- Success icon -->
-                    <div style="font-size:64px; margin-bottom:16px;">✅</div>
-
-                    <!-- Token card -->
-                    <div style="background:#1e293b; border:2px solid #334155; border-radius:16px;
-                                padding:32px 40px; margin-bottom:28px;">
-                        <div style="color:#64748b; font-size:11px; letter-spacing:3px;
-                                    text-transform:uppercase; margin-bottom:8px;">
-                            Token Issued
-                        </div>
-                        <div style="font-size:96px; font-weight:900; letter-spacing:8px;
-                                    color:#3b82f6; line-height:1; margin-bottom:12px;">
-                            <t t-esc="state.token.display_number"/>
-                        </div>
-                        <div style="color:#94a3b8; font-size:16px; margin-bottom:8px;">
-                            <t t-esc="state.token.queue_id[1]"/>
-                        </div>
-                        <t t-if="state.token.customer_name">
-                            <div style="color:#e2e8f0; font-size:18px; font-weight:600;
-                                        margin-bottom:8px;">
-                                <t t-esc="state.token.customer_name"/>
-                            </div>
-                        </t>
-                        <t t-if="state.selectedServices.length">
-                            <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
-                                <t t-foreach="state.selectedServices" t-as="s" t-key="s.id">
-                                    <span style="background:#0f172a; border:1px solid #334155;
-                                                 color:#94a3b8; padding:4px 12px;
-                                                 border-radius:20px; font-size:13px;">
-                                        <t t-esc="s.name"/>
-                                    </span>
-                                </t>
-                            </div>
-                        </t>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="d-flex gap-3 justify-content-center mb-4">
-                        <button t-on-click="printSlip"
-                                style="background:#1e293b; border:2px solid #334155; color:#e2e8f0;
-                                       padding:14px 28px; border-radius:12px; font-size:16px;
-                                       font-weight:600; cursor:pointer;">
-                            🖨️ Print Slip
-                        </button>
-                        <button t-on-click="newToken"
-                                style="background:#3b82f6; border:none; color:white;
-                                       padding:14px 28px; border-radius:12px; font-size:16px;
-                                       font-weight:600; cursor:pointer;">
-                            🎫 Issue Another
-                        </button>
-                    </div>
-
-                    <div style="color:#475569; font-size:14px;">
-                        Please wait — we will call your number
-                    </div>
-                </div>
-            </div>
-        </t>
-
+        </div><!-- /rightpane -->
     </div>
+    </t><!-- /select step -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SUCCESS STEP
+         ══════════════════════════════════════════════════════════════════════ -->
+    <t t-if="state.step === 'success'">
+    <div class="d-flex flex-grow-1 align-items-center justify-content-center bg-100">
+        <div class="text-center" style="max-width:480px; width:100%; padding:24px;">
+
+            <!-- Success icon -->
+            <div class="mb-3">
+                <i class="fa fa-check-circle text-success" style="font-size:60px;"/>
+            </div>
+
+            <!-- Token card  (mirrors receipt-like POS success card) -->
+            <div class="bg-white border rounded-3 p-4 mb-4 shadow-sm">
+
+                <div class="text-muted mb-1"
+                     style="font-size:10px; letter-spacing:3px; text-transform:uppercase; font-weight:600;">
+                    Token Issued
+                </div>
+
+                <!-- Big token number — the key element -->
+                <div class="o_qm_token_number my-3">
+                    <t t-esc="state.token.display_number"/>
+                </div>
+
+                <!-- Queue name -->
+                <div class="fw-bolder text-muted mb-2" style="font-size:15px;">
+                    <i class="fa fa-ticket me-1"/>
+                    <t t-esc="state.token.queue_id[1]"/>
+                </div>
+
+                <!-- Customer name (if provided) -->
+                <t t-if="state.token.customer_name">
+                    <div class="fw-bolder mb-2" style="font-size:17px;">
+                        <i class="fa fa-user text-muted me-1"/>
+                        <t t-esc="state.token.customer_name"/>
+                    </div>
+                </t>
+
+                <!-- Selected services badges -->
+                <t t-if="state.selectedServices.length">
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+                        <t t-foreach="state.selectedServices" t-as="s" t-key="s.id">
+                            <span class="badge rounded-pill text-bg-light border px-3 py-2"
+                                  style="font-size:12px;">
+                                <t t-esc="s.name"/>
+                            </span>
+                        </t>
+                    </div>
+                </t>
+            </div>
+
+            <!-- Action buttons  (mirrors POS receipt actions) -->
+            <div class="d-flex gap-3 justify-content-center mb-4">
+                <button t-on-click="printSlip"
+                        class="btn btn-light px-4 py-3 fw-bolder border">
+                    <i class="fa fa-print me-2"/>Print Slip
+                </button>
+                <button t-on-click="newToken"
+                        class="btn btn-primary px-4 py-3 fw-bolder">
+                    <i class="fa fa-ticket me-2"/>Issue Another
+                </button>
+            </div>
+
+            <div class="text-muted" style="font-size:14px;">
+                <i class="fa fa-clock-o me-1"/>
+                Please wait — we will call your number shortly
+            </div>
+
+        </div>
+    </div>
+    </t><!-- /success step -->
+
+</div>
 </t>
 
 </templates>
