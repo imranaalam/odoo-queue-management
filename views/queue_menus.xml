@@ -5,11 +5,12 @@
          MENU STRUCTURE
          Queue Management
          ├── Live Board          (queue kanban — always shows open queues)
-         ├── Issue Token         (quick wizard — Quick / Detailed modes)
+         ├── Issue Token         (POS-like kiosk — OWL client action)
          ├── Queues              (queue kanban/list)
          ├── All Tokens          (token list/form)
          └── Configuration
-             ├── Service Types   (per-queue service definitions)
+             ├── Service Categories  (category tiles on kiosk)
+             ├── Service Types       (per-queue service definitions)
              └── Manage Queues
          ══════════════════════════════════════════════════════════════════ -->
 
@@ -30,12 +31,12 @@
         sequence="10"
         groups="queue_management.group_queue_user"/>
 
-    <!-- Issue Token (wizard) -->
+    <!-- Issue Token (POS-like kiosk) -->
     <menuitem
         id="menu_queue_issue_token"
         name="Issue Token"
         parent="menu_queue_management_root"
-        action="action_quick_token_wizard"
+        action="action_queue_kiosk"
         sequence="15"
         groups="queue_management.group_queue_user"/>
 
@@ -66,11 +67,19 @@
         groups="queue_management.group_queue_manager"/>
 
     <menuitem
+        id="menu_queue_service_categories"
+        name="Service Categories"
+        parent="menu_queue_configuration"
+        action="action_queue_service_category"
+        sequence="5"
+        groups="queue_management.group_queue_manager"/>
+
+    <menuitem
         id="menu_queue_service_types"
         name="Service Types"
         parent="menu_queue_configuration"
         action="action_queue_service"
-        sequence="5"
+        sequence="7"
         groups="queue_management.group_queue_manager"/>
 
     <menuitem

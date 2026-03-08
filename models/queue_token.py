@@ -19,11 +19,10 @@ class QueueToken(models.Model):
         'Token #', compute='_compute_display', store=True
     )
 
-    # ── Service ───────────────────────────────────────────────────────────────
-    service_id = fields.Many2one(
-        'queue.service', 'Service Type',
-        domain="[('queue_id', '=', queue_id)]",
-        ondelete='set null',
+    # ── Services (Many2many — customer may select multiple) ────────────────────
+    service_ids = fields.Many2many(
+        'queue.service', 'queue_token_service_rel', 'token_id', 'service_id',
+        string='Services',
     )
 
     # ── Customer ──────────────────────────────────────────────────────────────

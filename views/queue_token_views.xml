@@ -22,7 +22,9 @@
                 </control>
                 <field name="display_number"/>
                 <field name="queue_id"/>
-                <field name="service_id"     optional="show"/>
+                <field name="service_ids"    widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   optional="show"/>
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
                 <field name="partner_id"     optional="show"/>
@@ -66,7 +68,7 @@
                     class="o_kanban_small_column">
                 <field name="display_number"/>
                 <field name="queue_id"/>
-                <field name="service_id"/>
+                <field name="service_ids"/>
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
                 <field name="state"/>
@@ -88,11 +90,9 @@
                                     <field name="state"/>
                                 </span>
                             </div>
-                            <t t-if="record.service_id.raw_value">
+                            <t t-if="record.service_ids.raw_value and record.service_ids.raw_value.length">
                                 <div class="mt4">
-                                    <span class="badge bg-light text-dark border">
-                                        <field name="service_id"/>
-                                    </span>
+                                    <field name="service_ids" widget="many2many_tags"/>
                                 </div>
                             </t>
                             <div class="mt4">
@@ -193,8 +193,8 @@
                     <group>
                         <group string="Queue">
                             <field name="queue_id"/>
-                            <field name="service_id"
-                                   domain="[('queue_id', '=', queue_id)]"/>
+                            <field name="service_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
                             <field name="source"/>
                             <field name="number" readonly="1"/>
                         </group>
@@ -233,7 +233,7 @@
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
                 <field name="queue_id"/>
-                <field name="service_id"/>
+                <field name="service_ids"/>
                 <field name="partner_id"/>
                 <!-- Quick filters by state -->
                 <filter string="Waiting"  name="state_waiting"
@@ -252,7 +252,7 @@
                     <filter string="Queue"   name="group_queue"
                             context="{'group_by': 'queue_id'}"/>
                     <filter string="Service" name="group_service"
-                            context="{'group_by': 'service_id'}"/>
+                            context="{'group_by': 'service_ids'}"/>
                     <filter string="State"   name="group_state"
                             context="{'group_by': 'state'}"/>
                     <filter string="Source"  name="group_source"

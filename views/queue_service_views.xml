@@ -11,9 +11,12 @@
         <field name="model">queue.service</field>
         <field name="arch" type="xml">
             <tree string="Service Types">
-                <field name="sequence" widget="handle"/>
-                <field name="queue_id"/>
+                <field name="sequence"   widget="handle"/>
+                <field name="image_1920" widget="image"
+                       options="{'size': [32, 32]}" string=""/>
+                <field name="category_id"/>
                 <field name="name"/>
+                <field name="queue_id"/>
                 <field name="description"/>
                 <field name="waiting_count" string="Waiting Now"/>
                 <field name="token_count"   string="Today"/>
@@ -28,7 +31,7 @@
             <form string="Service Type">
                 <sheet>
                     <div class="o_stat_buttons">
-                        <div class="o_stat_button" type="button">
+                        <div class="o_stat_button">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value text-warning">
                                     <field name="waiting_count"/>
@@ -36,7 +39,7 @@
                                 <span class="o_stat_text">Waiting Now</span>
                             </div>
                         </div>
-                        <div class="o_stat_button" type="button">
+                        <div class="o_stat_button">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value">
                                     <field name="token_count"/>
@@ -45,19 +48,27 @@
                             </div>
                         </div>
                     </div>
+                    <field name="image_1920" widget="image"
+                           options="{'size': [128, 128]}"
+                           class="oe_avatar"/>
                     <div class="oe_title">
                         <label for="name"/>
-                        <h1><field name="name" placeholder="Service Name (e.g. Hydrafacial)"/></h1>
+                        <h1>
+                            <field name="name"
+                                   placeholder="Service Name (e.g. Hydrafacial, Hair Removal)"/>
+                        </h1>
                     </div>
                     <group>
                         <group>
-                            <field name="queue_id"/>
+                            <field name="category_id"/>
+                            <field name="queue_id"
+                                   help="Leave empty to show in all queues on the kiosk"/>
                             <field name="sequence"/>
                             <field name="active" widget="boolean_toggle"/>
                         </group>
                         <group>
                             <field name="description"
-                                   placeholder="Brief description of this service…"/>
+                                   placeholder="Short description shown on the kiosk card…"/>
                         </group>
                     </group>
                 </sheet>
@@ -72,10 +83,13 @@
             <search string="Search Service Types">
                 <field name="name"/>
                 <field name="queue_id"/>
+                <field name="category_id"/>
                 <filter string="Active" name="active"
                         domain="[('active','=',True)]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Queue" name="group_queue"
+                    <filter string="Category" name="group_category"
+                            context="{'group_by': 'category_id'}"/>
+                    <filter string="Queue"    name="group_queue"
                             context="{'group_by': 'queue_id'}"/>
                 </group>
             </search>
@@ -93,10 +107,20 @@
             </p>
             <p>
                 Add services like <b>Hydrafacial</b>, <b>Hair Removal</b>,
-                <b>Laser</b>, <b>GP Consultation</b> etc. to your queues.
-                Staff can then filter by service to see which station needs attention.
+                <b>Laser</b>, <b>GP Consultation</b> etc.
+                Upload an image for each to make the kiosk visually appealing.
+                Use the <b>Import from POS</b> action to import existing POS products.
             </p>
         </field>
+    </record>
+
+    <!-- Server action: Import from POS (appears in Action dropdown on list) -->
+    <record id="action_server_import_from_pos" model="ir.actions.server">
+        <field name="name">Import from POS</field>
+        <field name="model_id" ref="model_queue_service"/>
+        <field name="binding_model_id" ref="model_queue_service"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_import_from_pos()</field>
     </record>
 
 </odoo>

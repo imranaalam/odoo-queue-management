@@ -6,3 +6,5 @@ access_queue_token_manager,queue.token manager,model_queue_token,queue_managemen
 access_queue_service_user,queue.service user,model_queue_service,queue_management.group_queue_user,1,0,0,0
 access_queue_service_manager,queue.service manager,model_queue_service,queue_management.group_queue_manager,1,1,1,1
 access_queue_quick_wizard_user,queue.quick.wizard user,model_queue_quick_wizard,queue_management.group_queue_user,1,1,1,1
+access_queue_service_category_user,queue.service.category user,model_queue_service_category,queue_management.group_queue_user,1,0,0,0
+access_queue_service_category_manager,queue.service.category manager,model_queue_service_category,queue_management.group_queue_manager,1,1,1,1

@@ -34,12 +34,12 @@
                     </group>
 
                     <!-- Service type — only when queue has services -->
-                    <group string="Service Type"
+                    <group string="Service Type (select one or more)"
                            invisible="not has_services">
-                        <field name="service_id"
-                               domain="[('queue_id', '=', queue_id)]"
-                               widget="radio"
-                               options="{'no_create': True, 'no_open': True}"
+                        <field name="service_ids"
+                               domain="[('queue_id', 'in', [queue_id, False])]"
+                               widget="many2many_checkboxes"
+                               options="{'no_create': True}"
                                nolabel="1"/>
                     </group>
 

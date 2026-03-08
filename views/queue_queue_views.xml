@@ -362,10 +362,10 @@
                                       decoration-success="state == 'done'"
                                       decoration-primary="state in ['called','serving']"
                                       decoration-muted="state in ['skipped','noshow']">
-                                    <!-- queue_id must be present for service_id domain -->
-                                    <field name="queue_id" column_invisible="1"/>
                                     <field name="display_number" readonly="1"/>
-                                    <field name="service_id"     optional="show"/>
+                                    <field name="service_ids" widget="many2many_tags"
+                                           options="{'no_create': True}"
+                                           optional="show"/>
                                     <field name="customer_name"/>
                                     <field name="customer_phone"/>
                                     <field name="state"

@@ -3,10 +3,10 @@ from odoo import models, fields, api
 
 class QueueQuickWizard(models.TransientModel):
     """
-    Two-mode token-issue wizard.
+    Two-mode token-issue wizard (fallback for when kiosk is not convenient).
 
     Quick mode  — just pick a queue → token created instantly, no customer info.
-    Detailed mode — pick queue + service type + optional customer details.
+    Detailed mode — pick queue + service types + optional customer details.
     """
     _name        = 'queue.quick.wizard'
     _description = 'Issue Token Wizard'
@@ -17,14 +17,15 @@ class QueueQuickWizard(models.TransientModel):
         ('detailed', 'Detailed Token'),
     ], string='Mode', default='quick', required=True)
 
-    # ── Queue & Service ───────────────────────────────────────────────────────
+    # ── Queue & Services ──────────────────────────────────────────────────────
     queue_id = fields.Many2one(
         'queue.queue', 'Queue', required=True,
         domain=[('state', '=', 'open')],
     )
-    service_id = fields.Many2one(
-        'queue.service', 'Service Type',
-        domain="[('queue_id', '=', queue_id)]",
+    service_ids = fields.Many2many(
+        'queue.service', 'queue_wizard_service_rel', 'wizard_id', 'service_id',
+        string='Services',
+        domain="[('queue_id', 'in', [queue_id, False])]",
     )
 
     # ── Customer (shown in detailed mode only) ────────────────────────────────
@@ -35,15 +36,17 @@ class QueueQuickWizard(models.TransientModel):
 
     # ── Computed helpers ──────────────────────────────────────────────────────
     has_services = fields.Boolean(compute='_compute_has_services', store=False)
-    queue_info   = fields.Char(compute='_compute_queue_info',   store=False,
+    queue_info   = fields.Char(compute='_compute_queue_info', store=False,
                                string='Queue Info')
 
     @api.depends('queue_id', 'queue_id.service_ids')
     def _compute_has_services(self):
         for rec in self:
-            rec.has_services = bool(
-                rec.queue_id and rec.queue_id.service_ids
-            )
+            services = self.env['queue.service'].search([
+                ('queue_id', 'in', [rec.queue_id.id, False] if rec.queue_id else [False]),
+                ('active', '=', True),
+            ]) if rec.queue_id else self.env['queue.service']
+            rec.has_services = bool(services)
 
     @api.depends('queue_id')
     def _compute_queue_info(self):
@@ -60,8 +63,7 @@ class QueueQuickWizard(models.TransientModel):
     # ── Onchange ──────────────────────────────────────────────────────────────
     @api.onchange('queue_id')
     def _onchange_queue_id(self):
-        """Clear service when queue changes."""
-        self.service_id = False
+        self.service_ids = False
 
     @api.onchange('partner_id')
     def _onchange_partner_id(self):
@@ -81,8 +83,8 @@ class QueueQuickWizard(models.TransientModel):
             'queue_id': self.queue_id.id,
             'source':   'manual',
         }
-        if self.service_id:
-            vals['service_id'] = self.service_id.id
+        if self.service_ids:
+            vals['service_ids'] = [(6, 0, self.service_ids.ids)]
         if self.wizard_type == 'detailed':
             vals.update({
                 'customer_name':  self.customer_name  or False,

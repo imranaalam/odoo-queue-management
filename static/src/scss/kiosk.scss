@@ -1,0 +1,186 @@
+// ─────────────────────────────────────────────────────────────
+//  Queue Management Kiosk — Dark POS-like theme
+// ─────────────────────────────────────────────────────────────
+
+.o_qm_kiosk {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    user-select: none;
+}
+
+// ── Category sidebar buttons ──────────────────────────────────
+
+.o_qm_cat_btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #cbd5e1;
+    }
+
+    &.active {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border-left: 3px solid #3b82f6;
+    }
+}
+
+.o_qm_cat_label {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+// ── Service cards ─────────────────────────────────────────────
+
+.o_qm_svc_card {
+    position: relative;
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    transition: all 0.15s ease;
+    height: 100%;
+
+    &:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+    }
+
+    &.selected {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.12);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+}
+
+.o_qm_check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.o_qm_svc_img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.o_qm_svc_placeholder {
+    width: 80px;
+    height: 80px;
+    background: #0f172a;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #334155;
+    margin: 0 auto 10px;
+}
+
+.o_qm_svc_name {
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.o_qm_svc_desc {
+    color: #64748b;
+    font-size: 11px;
+    margin-top: 4px;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+// ── Cart panel labels ─────────────────────────────────────────
+
+.o_qm_label {
+    color: #64748b;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+// ── Customer input fields ─────────────────────────────────────
+
+.o_qm_input {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 10px 12px;
+    font-size: 13px;
+    outline: none;
+
+    &::placeholder {
+        color: #475569;
+    }
+
+    &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+}
+
+// ── Issue Token button ────────────────────────────────────────
+
+.o_qm_issue_btn {
+    width: 100%;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.15s, transform 0.15s;
+    margin-top: auto;
+
+    &:hover:not(:disabled) {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}

@@ -1,3 +1,4 @@
+from . import queue_service_category
 from . import queue_service
 from . import queue_queue
 from . import queue_token
