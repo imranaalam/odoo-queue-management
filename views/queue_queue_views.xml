@@ -36,7 +36,7 @@
         </field>
     </record>
 
-    <!-- ── Kanban ─────────────────────────────────────────────────────────── -->
+    <!-- ── Kanban (Queues page — grouped by state) ────────────────────────── -->
     <record id="view_queue_queue_kanban" model="ir.ui.view">
         <field name="name">queue.queue.kanban</field>
         <field name="model">queue.queue</field>
@@ -107,6 +107,100 @@
         </field>
     </record>
 
+    <!-- ── Kanban (Live Board — no grouping, big cards, always shows queues) ── -->
+    <record id="view_queue_live_board_kanban" model="ir.ui.view">
+        <field name="name">queue.queue.live.board</field>
+        <field name="model">queue.queue</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <kanban quick_create="false" records_draggable="false"
+                    class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="prefix"/>
+                <field name="state"/>
+                <field name="color"/>
+                <field name="waiting_count"/>
+                <field name="called_count"/>
+                <field name="done_count"/>
+                <field name="current_token_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card o_color_#{record.color.raw_value}"
+                             style="min-height:220px; padding:16px;">
+
+                            <!-- Queue name + status badge -->
+                            <div class="d-flex justify-content-between align-items-center mb8">
+                                <strong style="font-size:20px;">
+                                    <field name="name"/>
+                                </strong>
+                                <span t-attf-class="badge #{
+                                    record.state.raw_value == 'open'   ? 'bg-success' :
+                                    record.state.raw_value == 'paused' ? 'bg-warning text-dark' :
+                                    'bg-secondary'
+                                }">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+
+                            <!-- Now Serving panel -->
+                            <div class="text-center mb8 py8"
+                                 style="background:rgba(255,255,255,0.6); border-radius:8px;">
+                                <div class="small text-muted mb2"
+                                     style="letter-spacing:2px; text-transform:uppercase;">
+                                    Now Serving
+                                </div>
+                                <t t-if="record.current_token_id.raw_value">
+                                    <strong style="font-size:42px; color:#0d6efd;
+                                                   letter-spacing:6px; line-height:1.1;">
+                                        <field name="current_token_id"/>
+                                    </strong>
+                                </t>
+                                <t t-else="">
+                                    <span style="font-size:30px; color:#ccc; letter-spacing:4px;">
+                                        ——
+                                    </span>
+                                </t>
+                            </div>
+
+                            <!-- Stats row -->
+                            <div class="row text-center mb8">
+                                <div class="col-4">
+                                    <span t-attf-class="h2 fw-bold #{record.waiting_count.raw_value > 5 ? 'text-danger' : 'text-warning'}">
+                                        <field name="waiting_count"/>
+                                    </span>
+                                    <div class="small text-muted">Waiting</div>
+                                </div>
+                                <div class="col-4">
+                                    <span class="h2 fw-bold text-primary">
+                                        <field name="called_count"/>
+                                    </span>
+                                    <div class="small text-muted">Serving</div>
+                                </div>
+                                <div class="col-4">
+                                    <span class="h2 fw-bold text-success">
+                                        <field name="done_count"/>
+                                    </span>
+                                    <div class="small text-muted">Done</div>
+                                </div>
+                            </div>
+
+                            <!-- Call Next button (only when open) -->
+                            <button t-if="record.state.raw_value == 'open'"
+                                    name="action_call_next" type="object"
+                                    class="btn btn-primary w-100">
+                                Call Next
+                            </button>
+                            <div t-if="record.state.raw_value == 'paused'"
+                                 class="text-center text-warning fw-bold mt4">
+                                Queue Paused
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <!-- ── Form ───────────────────────────────────────────────────────────── -->
     <record id="view_queue_queue_form" model="ir.ui.view">
         <field name="name">queue.queue.form</field>
@@ -144,8 +238,7 @@
                     <div class="o_stat_buttons">
                         <button class="o_stat_button" type="object"
                                 name="action_view_tokens"
-                                icon="fa-hourglass-half"
-                                >
+                                icon="fa-hourglass-half">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value text-warning">
                                     <field name="waiting_count"/>
@@ -155,8 +248,7 @@
                         </button>
                         <button class="o_stat_button" type="object"
                                 name="action_view_tokens"
-                                icon="fa-bullhorn"
-                                >
+                                icon="fa-bullhorn">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value text-primary">
                                     <field name="called_count"/>
@@ -166,8 +258,7 @@
                         </button>
                         <button class="o_stat_button" type="object"
                                 name="action_view_tokens"
-                                icon="fa-check-circle"
-                                >
+                                icon="fa-check-circle">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value text-success">
                                     <field name="done_count"/>
@@ -208,9 +299,31 @@
                         </group>
                     </group>
 
-                    <field name="description" placeholder="Optional description or instructions for this queue…"/>
+                    <field name="description"
+                           placeholder="Optional description or instructions for this queue…"/>
 
                     <notebook>
+                        <!-- ── Services tab ────────────────────────────── -->
+                        <page string="Services" name="services">
+                            <field name="service_ids" nolabel="1">
+                                <tree string="Service Types" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="waiting_count" string="Waiting Now"
+                                           readonly="1"/>
+                                    <field name="token_count"   string="Today"
+                                           readonly="1"/>
+                                </tree>
+                            </field>
+                            <div class="alert alert-info mt8" role="alert">
+                                <strong>Tip:</strong> Define service types here
+                                (e.g. Hydrafacial, Hair Removal, Laser, GP Consult).
+                                Staff can then filter the Live Board or All Tokens
+                                by service to see which station needs attention.
+                            </div>
+                        </page>
+
                         <!-- ── Settings tab ────────────────────────────── -->
                         <page string="Settings" name="settings">
                             <group>
@@ -249,7 +362,10 @@
                                       decoration-success="state == 'done'"
                                       decoration-primary="state in ['called','serving']"
                                       decoration-muted="state in ['skipped','noshow']">
+                                    <!-- queue_id must be present for service_id domain -->
+                                    <field name="queue_id" column_invisible="1"/>
                                     <field name="display_number" readonly="1"/>
+                                    <field name="service_id"     optional="show"/>
                                     <field name="customer_name"/>
                                     <field name="customer_phone"/>
                                     <field name="state"
@@ -260,14 +376,14 @@
                                            decoration-muted="state in ['skipped','noshow']"/>
                                     <field name="source"/>
                                     <field name="wait_minutes" string="Wait (min)" readonly="1"/>
-                                    <field name="created_at" readonly="1"/>
-                                    <button name="action_call"   string="Call"
+                                    <field name="created_at"   readonly="1"/>
+                                    <button name="action_call"  string="Call"
                                             type="object" title="Call"
                                             invisible="state not in ('waiting', 'skipped')"/>
-                                    <button name="action_done"   string="Done"
+                                    <button name="action_done"  string="Done"
                                             type="object" title="Done"
                                             invisible="state not in ('called', 'serving')"/>
-                                    <button name="action_skip"   string="Skip"
+                                    <button name="action_skip"  string="Skip"
                                             type="object" title="Skip"
                                             invisible="state not in ('waiting', 'called')"/>
                                 </tree>
@@ -322,7 +438,25 @@
                 No queues yet — create your first queue!
             </p>
             <p>
-                Each queue has its own prefix (e.g. "Q"), state, and webhook settings.
+                Each queue has its own prefix (e.g. "Q"), service types, and webhook settings.
+            </p>
+        </field>
+    </record>
+
+    <!-- Live Board — queue.queue kanban (no grouping, shows all open queues) -->
+    <record id="action_queue_live_board" model="ir.actions.act_window">
+        <field name="name">Live Board</field>
+        <field name="res_model">queue.queue</field>
+        <field name="view_mode">kanban,tree</field>
+        <field name="domain">[('active', '=', True)]</field>
+        <field name="context">{'search_default_state_open': 1}</field>
+        <field name="view_ids"
+               eval="[(5,0,0),
+                      (0,0,{'view_mode':'kanban','view_id':ref('view_queue_live_board_kanban')}),
+                      (0,0,{'view_mode':'tree','view_id':ref('view_queue_queue_list')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No open queues — go to Queues and set one to Open!
             </p>
         </field>
     </record>

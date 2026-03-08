@@ -60,7 +60,8 @@ class QueueQueue(models.Model):
     )
 
     # ── Relations ─────────────────────────────────────────────────────────────
-    token_ids = fields.One2many('queue.token', 'queue_id', 'Tokens')
+    token_ids   = fields.One2many('queue.token',   'queue_id', 'Tokens')
+    service_ids = fields.One2many('queue.service', 'queue_id', 'Services')
 
     # ── Computed statistics ───────────────────────────────────────────────────
     token_count   = fields.Integer('Total Tokens',  compute='_compute_counts', store=False)

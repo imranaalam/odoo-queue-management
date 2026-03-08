@@ -15,11 +15,17 @@
                   decoration-primary="state in ['called','serving']"
                   decoration-warning="state == 'waiting'"
                   decoration-muted="state in ['skipped','noshow']">
+                <!-- "New Token" opens the full detailed form.
+                     Use the "Issue Token" menu for the Quick Token wizard. -->
+                <control>
+                    <create string="New Token"/>
+                </control>
                 <field name="display_number"/>
                 <field name="queue_id"/>
+                <field name="service_id"     optional="show"/>
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
-                <field name="partner_id" optional="show"/>
+                <field name="partner_id"     optional="show"/>
                 <field name="state" widget="badge"
                        decoration-warning="state == 'waiting'"
                        decoration-primary="state in ['called','serving']"
@@ -51,15 +57,16 @@
         </field>
     </record>
 
-    <!-- ── Kanban (Live Board) ────────────────────────────────────────────── -->
+    <!-- ── Kanban (Live Board for tokens — kept for reference) ───────────── -->
     <record id="view_queue_token_kanban" model="ir.ui.view">
         <field name="name">queue.token.kanban</field>
         <field name="model">queue.token</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="state" quick_create="false"
+            <kanban default_group_by="queue_id" quick_create="false"
                     class="o_kanban_small_column">
                 <field name="display_number"/>
                 <field name="queue_id"/>
+                <field name="service_id"/>
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
                 <field name="state"/>
@@ -81,6 +88,13 @@
                                     <field name="state"/>
                                 </span>
                             </div>
+                            <t t-if="record.service_id.raw_value">
+                                <div class="mt4">
+                                    <span class="badge bg-light text-dark border">
+                                        <field name="service_id"/>
+                                    </span>
+                                </div>
+                            </t>
                             <div class="mt4">
                                 <t t-if="record.customer_name.raw_value">
                                     <div class="fw-bold">
@@ -106,19 +120,19 @@
                                         name="action_call" type="object"
                                         class="btn btn-sm btn-primary flex-fill"
                                         title="Call this customer">
-                                    📢 Call
+                                    Call
                                 </button>
                                 <button t-if="record.state.raw_value in ['called','serving']"
                                         name="action_done" type="object"
                                         class="btn btn-sm btn-success flex-fill"
                                         title="Mark as Done">
-                                    ✓ Done
+                                    Done
                                 </button>
                                 <button t-if="record.state.raw_value in ['waiting','called']"
                                         name="action_skip" type="object"
                                         class="btn btn-sm btn-secondary flex-fill"
                                         title="Skip">
-                                    ⏭
+                                    Skip
                                 </button>
                             </div>
                         </div>
@@ -179,6 +193,8 @@
                     <group>
                         <group string="Queue">
                             <field name="queue_id"/>
+                            <field name="service_id"
+                                   domain="[('queue_id', '=', queue_id)]"/>
                             <field name="source"/>
                             <field name="number" readonly="1"/>
                         </group>
@@ -217,6 +233,7 @@
                 <field name="customer_name"/>
                 <field name="customer_phone"/>
                 <field name="queue_id"/>
+                <field name="service_id"/>
                 <field name="partner_id"/>
                 <!-- Quick filters by state -->
                 <filter string="Waiting"  name="state_waiting"
@@ -232,13 +249,15 @@
                         domain="[('created_at','&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
                 <!-- Group by -->
                 <group expand="0" string="Group By">
-                    <filter string="Queue"  name="group_queue"
+                    <filter string="Queue"   name="group_queue"
                             context="{'group_by': 'queue_id'}"/>
-                    <filter string="State"  name="group_state"
+                    <filter string="Service" name="group_service"
+                            context="{'group_by': 'service_id'}"/>
+                    <filter string="State"   name="group_state"
                             context="{'group_by': 'state'}"/>
-                    <filter string="Source" name="group_source"
+                    <filter string="Source"  name="group_source"
                             context="{'group_by': 'source'}"/>
-                    <filter string="Date"   name="group_date"
+                    <filter string="Date"    name="group_date"
                             context="{'group_by': 'created_at:day'}"/>
                 </group>
             </search>
@@ -255,21 +274,11 @@
         <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No tokens yet — open a queue and issue the first token!
+                No tokens yet!
             </p>
-        </field>
-    </record>
-
-    <!-- Live Board (default: kanban grouped by state) -->
-    <record id="action_queue_live_board" model="ir.actions.act_window">
-        <field name="name">Live Board</field>
-        <field name="res_model">queue.token</field>
-        <field name="view_mode">kanban,tree,form</field>
-        <field name="context">{'search_default_state_waiting': 1, 'search_default_group_state': 1}</field>
-        <field name="domain">[('state', 'not in', ['done','skipped','noshow'])]</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                The queue is empty — no active tokens right now.
+            <p>
+                Use <strong>Quick Token</strong> to issue a number instantly,
+                or <strong>Detailed Token</strong> to add customer info and service type.
             </p>
         </field>
     </record>

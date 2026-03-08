@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SERVICE TYPES  (queue.service)
+         Managed from Configuration → Service Types
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_queue_service_list" model="ir.ui.view">
+        <field name="name">queue.service.list</field>
+        <field name="model">queue.service</field>
+        <field name="arch" type="xml">
+            <tree string="Service Types">
+                <field name="sequence" widget="handle"/>
+                <field name="queue_id"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="waiting_count" string="Waiting Now"/>
+                <field name="token_count"   string="Today"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_queue_service_form" model="ir.ui.view">
+        <field name="name">queue.service.form</field>
+        <field name="model">queue.service</field>
+        <field name="arch" type="xml">
+            <form string="Service Type">
+                <sheet>
+                    <div class="o_stat_buttons">
+                        <div class="o_stat_button" type="button">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value text-warning">
+                                    <field name="waiting_count"/>
+                                </span>
+                                <span class="o_stat_text">Waiting Now</span>
+                            </div>
+                        </div>
+                        <div class="o_stat_button" type="button">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="token_count"/>
+                                </span>
+                                <span class="o_stat_text">Today</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Service Name (e.g. Hydrafacial)"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="queue_id"/>
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="description"
+                                   placeholder="Brief description of this service…"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_queue_service_search" model="ir.ui.view">
+        <field name="name">queue.service.search</field>
+        <field name="model">queue.service</field>
+        <field name="arch" type="xml">
+            <search string="Search Service Types">
+                <field name="name"/>
+                <field name="queue_id"/>
+                <filter string="Active" name="active"
+                        domain="[('active','=',True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Queue" name="group_queue"
+                            context="{'group_by': 'queue_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_queue_service" model="ir.actions.act_window">
+        <field name="name">Service Types</field>
+        <field name="res_model">queue.service</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No service types yet!
+            </p>
+            <p>
+                Add services like <b>Hydrafacial</b>, <b>Hair Removal</b>,
+                <b>Laser</b>, <b>GP Consultation</b> etc. to your queues.
+                Staff can then filter by service to see which station needs attention.
+            </p>
+        </field>
+    </record>
+
+</odoo>

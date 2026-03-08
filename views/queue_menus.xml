@@ -4,11 +4,13 @@
     <!-- ══════════════════════════════════════════════════════════════════
          MENU STRUCTURE
          Queue Management
-         ├── Live Board      (token kanban, active tokens only)
-         ├── Queues          (queue kanban/list)
-         ├── All Tokens      (token list)
+         ├── Live Board          (queue kanban — always shows open queues)
+         ├── Issue Token         (quick wizard — Quick / Detailed modes)
+         ├── Queues              (queue kanban/list)
+         ├── All Tokens          (token list/form)
          └── Configuration
-             └── Settings    (placeholder — uses ir.actions.act_window_close)
+             ├── Service Types   (per-queue service definitions)
+             └── Manage Queues
          ══════════════════════════════════════════════════════════════════ -->
 
     <!-- Root application menu — no groups restriction so the app tile is
@@ -26,6 +28,15 @@
         parent="menu_queue_management_root"
         action="action_queue_live_board"
         sequence="10"
+        groups="queue_management.group_queue_user"/>
+
+    <!-- Issue Token (wizard) -->
+    <menuitem
+        id="menu_queue_issue_token"
+        name="Issue Token"
+        parent="menu_queue_management_root"
+        action="action_quick_token_wizard"
+        sequence="15"
         groups="queue_management.group_queue_user"/>
 
     <!-- Queues -->
@@ -52,6 +63,14 @@
         name="Configuration"
         parent="menu_queue_management_root"
         sequence="90"
+        groups="queue_management.group_queue_manager"/>
+
+    <menuitem
+        id="menu_queue_service_types"
+        name="Service Types"
+        parent="menu_queue_configuration"
+        action="action_queue_service"
+        sequence="5"
         groups="queue_management.group_queue_manager"/>
 
     <menuitem

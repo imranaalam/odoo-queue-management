@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ISSUE TOKEN WIZARD  (queue.quick.wizard)
+         Two modes:
+           Quick    — pick a queue, one click → number assigned instantly
+           Detailed — pick queue + service type + customer name/phone
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_queue_quick_wizard_form" model="ir.ui.view">
+        <field name="name">queue.quick.wizard.form</field>
+        <field name="model">queue.quick.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Issue Token">
+                <sheet>
+                    <!-- Mode selector at top -->
+                    <div class="row mb16">
+                        <div class="col-12">
+                            <field name="wizard_type" widget="radio"
+                                   options="{'horizontal': True}"/>
+                        </div>
+                    </div>
+
+                    <!-- Queue selector — always visible, shown as radio buttons -->
+                    <group string="Select Queue">
+                        <field name="queue_id" widget="radio"
+                               domain="[('state','=','open')]"
+                               nolabel="1"
+                               options="{'no_create': True, 'no_open': True}"/>
+                        <div class="text-muted small mt4" colspan="2">
+                            <field name="queue_info" readonly="1" nolabel="1"/>
+                        </div>
+                    </group>
+
+                    <!-- Service type — only when queue has services -->
+                    <group string="Service Type"
+                           invisible="not has_services">
+                        <field name="service_id"
+                               domain="[('queue_id', '=', queue_id)]"
+                               widget="radio"
+                               options="{'no_create': True, 'no_open': True}"
+                               nolabel="1"/>
+                    </group>
+
+                    <!-- Customer details — only in detailed mode -->
+                    <group string="Customer Details"
+                           invisible="wizard_type != 'detailed'">
+                        <field name="partner_id"
+                               options="{'no_create_edit': True}"/>
+                        <field name="customer_name"
+                               placeholder="Customer name (optional)"/>
+                        <field name="customer_phone"
+                               placeholder="Phone / WhatsApp (optional)"/>
+                        <field name="notes"
+                               placeholder="Extra notes…"/>
+                    </group>
+
+                    <!-- Hidden helper fields -->
+                    <field name="has_services" invisible="1"/>
+                </sheet>
+                <footer>
+                    <button name="action_issue_token"
+                            string="Issue Token"
+                            type="object"
+                            class="btn-primary"
+                            data-hotkey="v"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard as a full-page dialog -->
+    <record id="action_quick_token_wizard" model="ir.actions.act_window">
+        <field name="name">Issue Token</field>
+        <field name="res_model">queue.quick.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_queue_quick_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{'default_wizard_type': 'quick'}</field>
+    </record>
+
+    <!-- Also expose as a server action so it shows in the Action dropdown
+         on the All Tokens list view -->
+    <record id="action_server_issue_token" model="ir.actions.server">
+        <field name="name">Issue Token</field>
+        <field name="model_id" ref="model_queue_token"/>
+        <field name="binding_model_id" ref="model_queue_token"/>
+        <field name="state">code</field>
+        <field name="code">action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Issue Token',
+    'res_model': 'queue.quick.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': {'default_wizard_type': 'quick'},
+}</field>
+    </record>
+
+</odoo>

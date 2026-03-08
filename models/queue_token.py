@@ -19,6 +19,13 @@ class QueueToken(models.Model):
         'Token #', compute='_compute_display', store=True
     )
 
+    # ── Service ───────────────────────────────────────────────────────────────
+    service_id = fields.Many2one(
+        'queue.service', 'Service Type',
+        domain="[('queue_id', '=', queue_id)]",
+        ondelete='set null',
+    )
+
     # ── Customer ──────────────────────────────────────────────────────────────
     partner_id     = fields.Many2one('res.partner', 'Customer', ondelete='set null')
     customer_name  = fields.Char('Customer Name')
